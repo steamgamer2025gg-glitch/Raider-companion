@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ARC Companion</title><style>
+body{font-family:Arial;background:#111;color:#fff;max-width:800px;margin:auto;padding:16px}h1{color:#ff8c1a}
+input,select,button{width:100%;padding:8px;margin:4px 0;border-radius:8px;border:none}
+input,select{background:#222;color:#fff}button{background:#ff8c1a}.tabs{display:flex;gap:6px}.tabs button{flex:1;background:#333;color:#fff}
+.card{background:#1c1c1c;padding:10px;border-radius:8px;margin:8px 0}
+.stats{background:#222;padding:10px;border-radius:8px;margin:8px 0}
+.row{display:flex;gap:6px}.row button{flex:1;background:#444;color:#fff}
+</style></head><body>
+<h1>ARC Companion</h1>
+<div class=stats id=stats></div>
+<div class=tabs><button onclick="tab='all';render()">All</button><button onclick="tab='favorites';render()">⭐</button><button onclick="tab='priority';render()">📌</button></div>
+<input id=name placeholder="Item"><input id=cat placeholder="Category"><input id=loc placeholder="Location"><button onclick=add()>Add</button>
+<input id=search placeholder="Search" oninput=render()><div id=list></div>
+<script>
+let items=JSON.parse(localStorage.arc_items||"[]"),tab='all';
+const save=()=>localStorage.arc_items=JSON.stringify(items);
+function add(){if(!name.value.trim())return;items.push({id:Date.now(),name:name.value,cat:cat.value,loc:loc.value,fav:false,priority:false,color:'gray'});name.value=cat.value=loc.value='';save();render();}
+function t(id,k){items.forEach(i=>i.id==id&&(i[k]=!i[k]));save();render();}
+function color(id,v){items.forEach(i=>i.id==id&&(i.color=v));save();render();}
+function del(id){items=items.filter(i=>i.id!=id);save();render();}
+function render(){
+let q=search.value.toLowerCase();
+let d=items.filter(i=>(tab=='all'||tab=='favorites'&&i.fav||tab=='priority'&&i.priority)&&((i.name+i.cat+i.loc).toLowerCase().includes(q))).sort((a,b)=>b.priority-a.priority);
+stats.innerHTML=`Total: ${items.length} | ⭐ ${items.filter(i=>i.fav).length} | 📌 ${items.filter(i=>i.priority).length} | Categories: ${new Set(items.map(i=>i.cat)).size}`;
+list.innerHTML='';
+d.forEach(i=>{let c=document.createElement('div');c.className='card';c.style.borderLeft='6px solid '+i.color;c.innerHTML=`<b>${i.name}</b> ${i.fav?'⭐':''}<br><small>${i.cat||'No Category'} • ${i.loc||'No Location'}</small><select onchange="color(${i.id},this.value)"><option ${i.color=='gray'?'selected':''}>gray</option><option ${i.color=='green'?'selected':''}>green</option><option ${i.color=='blue'?'selected':''}>blue</option><option ${i.color=='orange'?'selected':''}>orange</option><option ${i.color=='red'?'selected':''}>red</option></select><div class=row><button onclick="t(${i.id},'fav')">⭐</button><button onclick="t(${i.id},'priority')">📌</button><button onclick="del(${i.id})">Delete</button></div>`;list.appendChild(c);});
+}
+render();
+</script></body></html>
